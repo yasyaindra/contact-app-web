@@ -46,4 +46,9 @@ const addContact = (contact) => {
   saveContacts(contacts);
 };
 
-module.exports = { bacaKontak, findContact, addContact };
+const cekDuplikat = (nama) => {
+  const contacts = bacaKontak();
+  return contacts.find((contact) => contact.nama == nama);
+};
+
+module.exports = { bacaKontak, findContact, addContact, cekDuplikat };

@@ -3,6 +3,9 @@
     <div class="col-md-8">
       <h2>Daftar Kontak</h2>
       <a href="/contact/add"><div class="btn btn-primary mt-2">Tambah Contact</div></a>
+      <% if (msg.length != 0) { %>
+      <div class="alert alert-success mt-3" role="alert"><%= msg %></div>
+      <% } %>
       <table class="table">
         <thead>
           <tr>

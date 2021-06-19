@@ -1,11 +1,13 @@
 const { render } = require("ejs");
-const { urlencoded, response } = require("express");
 const express = require("express");
 const expressLayouts = require("express-ejs-layouts");
 const app = express();
-const { bacaKontak, findContact, addContact } = require("./utils/contacts");
+const { bacaKontak, findContact, addContact, cekDuplikat } = require("./utils/contacts");
 const { body, validationResult, check } = require("express-validator");
 const bodyParser = require("body-parser");
+const session = require("express-session");
+const cookieParser = require("cookie-parser");
+const flash = require("connect-flash");
 
 const port = 8080;
 
@@ -14,6 +16,18 @@ app.set("view engine", "ejs");
 app.use(expressLayouts);
 app.use(express.static("public"));
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// konfigurasi flash
+app.use(cookieParser("secret"));
+app.use(
+  session({
+    cookie: { maxAge: 6000 },
+    secret: "secret",
+    resave: true,
+    saveUninitialized: true,
+  })
+);
+app.use(flash());
 
 app.get("/", (req, res) => {
   // res.sendFile(`./index.html`, {root:__dirname})
@@ -27,8 +41,7 @@ app.get("/about", (req, res) => {
 
 app.get("/contact", (req, res) => {
   const contacts = bacaKontak();
-  console.log(contacts);
-  res.render("contact", { layout: "layout/main-layout", title: "Contact", contacts });
+  res.render("contact", { layout: "layout/main-layout", title: "Halaman Contact", contacts, msg: req.flash("msg") });
 });
 
 // Halaman form tambah data contact
@@ -43,7 +56,12 @@ app.post(
   "/contact",
   [
     body("nama").custom((value) => {
+      // https://www.youtube.com/watch?v=eu4uwmyHMHo&list=PLFIM0718LjIW-XBdVOerYgKegBtD6rSfD&index=18
       const duplikat = cekDuplikat(value);
+      if (duplikat) {
+        throw new Error("Nama kontak contact sudah digunakan");
+      }
+      return true;
     }),
     check("email", "Email tidak valid").isEmail(),
     check("nohp", "No hape salah").isMobilePhone("id-ID"),
@@ -51,10 +69,17 @@ app.post(
   (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      // return res.status(400).json({ errors: errors.array() });
+      res.render("add-contact", {
+        title: "Form Tambah Data Kontak",
+        layout: "layout/main-layout",
+        errors: errors.array(),
+      });
+    } else {
+      addContact(req.body);
+      req.flash("msg", "Data berhasil ditambah!");
+      res.redirect("/contact");
     }
-    // addContact(req.body);
-    // res.redirect("/contact");
   }
 );
 
