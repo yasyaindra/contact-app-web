@@ -1,7 +1,11 @@
+const { render } = require("ejs");
+const { urlencoded, response } = require("express");
 const express = require("express");
 const expressLayouts = require("express-ejs-layouts");
 const app = express();
-const { bacaKontak, findContact } = require("./utils/contacts");
+const { bacaKontak, findContact, addContact } = require("./utils/contacts");
+const { body, validationResult, check } = require("express-validator");
+const bodyParser = require("body-parser");
 
 const port = 8080;
 
@@ -9,6 +13,7 @@ const port = 8080;
 app.set("view engine", "ejs");
 app.use(expressLayouts);
 app.use(express.static("public"));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
   // res.sendFile(`./index.html`, {root:__dirname})
@@ -25,6 +30,33 @@ app.get("/contact", (req, res) => {
   console.log(contacts);
   res.render("contact", { layout: "layout/main-layout", title: "Contact", contacts });
 });
+
+// Halaman form tambah data contact
+app.get("/contact/add", (req, res) => {
+  res.render("add-contact", {
+    title: "Form Tambah Contact",
+    layout: "layout/main-layout",
+  });
+});
+
+app.post(
+  "/contact",
+  [
+    body("nama").custom((value) => {
+      const duplikat = cekDuplikat(value);
+    }),
+    check("email", "Email tidak valid").isEmail(),
+    check("nohp", "No hape salah").isMobilePhone("id-ID"),
+  ],
+  (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    // addContact(req.body);
+    // res.redirect("/contact");
+  }
+);
 
 app.get("/contact/:nama", (req, res) => {
   const contact = findContact(req.params.nama);

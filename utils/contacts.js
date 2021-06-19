@@ -34,4 +34,16 @@ const findContact = (nama) => {
   return contact;
 };
 
-module.exports = { bacaKontak, findContact };
+// menulis / menimpa file contacts json dengan data yang baru
+const saveContacts = (contacts) => {
+  fs.writeFileSync("temp/contacts.json", JSON.stringify(contacts));
+};
+
+//menambahkan data contact yang baru
+const addContact = (contact) => {
+  const contacts = bacaKontak();
+  contacts.push(contact);
+  saveContacts(contacts);
+};
+
+module.exports = { bacaKontak, findContact, addContact };
