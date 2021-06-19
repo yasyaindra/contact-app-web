@@ -1,7 +1,7 @@
 const express = require("express");
 const expressLayouts = require("express-ejs-layouts");
 const app = express();
-const { bacaKontak } = require("./utils/contacts");
+const { bacaKontak, findContact } = require("./utils/contacts");
 
 const port = 8080;
 
@@ -24,6 +24,12 @@ app.get("/contact", (req, res) => {
   const contacts = bacaKontak();
   console.log(contacts);
   res.render("contact", { layout: "layout/main-layout", title: "Contact", contacts });
+});
+
+app.get("/contact/:nama", (req, res) => {
+  const contact = findContact(req.params.nama);
+
+  res.render("detail", { layout: "layout/main-layout", title: "Halaman Detail", contact });
 });
 
 app.use("/", (req, res) => {
